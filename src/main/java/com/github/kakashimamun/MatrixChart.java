@@ -1,5 +1,6 @@
 package com.github.kakashimamun;
 
+import com.github.kakashimamun.data.DataFrame;
 import org.knowm.xchart.SwingWrapper;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
@@ -8,6 +9,7 @@ import org.knowm.xchart.style.markers.SeriesMarkers;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Created by Kakas on 12/14/2017.
@@ -27,7 +29,8 @@ public class MatrixChart {
         charts.add(chart);
 
         ESD esd = new ESD();
-        esd.PerformESD(decomposer.getResidual());
+
+        List<Double> anomalies = esd.PerformESD(new DataFrame(decomposer.getResidual()));
 
 //        chart = new XYChartBuilder().xAxisTitle("X").yAxisTitle("Y").width(800).height(600).build();
 //        series = chart.addSeries("" + 1, null, decomposer.getTrend());
