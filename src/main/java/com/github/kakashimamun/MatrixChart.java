@@ -21,16 +21,38 @@ public class MatrixChart {
 
         double[] d = Reader.read("C:\\Dev\\tsanomalydetection4j\\src\\main\\resources\\raw_data").stream().mapToDouble(v->(double)v).toArray();
 
-        Decomposer decomposer = new Decomposer(d,24);
+        Decomposer decomposer = new Decomposer(d,24*7);
 
         XYChart chart = new XYChartBuilder().xAxisTitle("X").yAxisTitle("Y").width(800).height(600).build();
-        XYSeries series = chart.addSeries("" + 1, null, decomposer.getResidual());
+
+        XYSeries series = chart.addSeries("" + 1, null, decomposer.getData());
         series.setMarker(SeriesMarkers.CIRCLE);
         charts.add(chart);
 
+        System.out.println(decomposer.getData().length);
+        System.out.println(decomposer.getResidual().length);
+        System.out.println(decomposer.getTrend().length);
+        System.out.println(decomposer.getSeasonal().length);
+
         ESD esd = new ESD();
 
-        List<Double> anomalies = esd.PerformESD(new DataFrame(decomposer.getResidual()));
+        double[] anomalies = esd.PerformESD(new DataFrame(decomposer.getResidual()));
+
+        double[] value = new double[anomalies.length];
+
+        int i=0;
+        for(double val:anomalies){
+            if(val!=0){
+                value[i] = d[i];
+            }
+            i++;
+        }
+
+        chart = new XYChartBuilder().xAxisTitle("X").yAxisTitle("Y").width(800).height(600).build();
+        series = chart.addSeries("" + 1, null, value);
+        series.setMarker(SeriesMarkers.NONE);
+        charts.add(chart);
+
 
 //        chart = new XYChartBuilder().xAxisTitle("X").yAxisTitle("Y").width(800).height(600).build();
 //        series = chart.addSeries("" + 1, null, decomposer.getTrend());

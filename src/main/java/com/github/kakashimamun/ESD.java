@@ -1,35 +1,53 @@
 package com.github.kakashimamun;
 
 import com.github.kakashimamun.data.DataFrame;
+import lombok.Builder;
 import org.apache.commons.math3.distribution.TDistribution;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Created by Kakas on 12/14/2017.
  */
 public class ESD {
 
-    public List<Double> PerformESD(DataFrame df){
-        double median = median(df.getDataPoints());
+    @Builder
+    static class Point implements Comparable<Point>{
+        int originalIndex;
+        double value;
+
+        @Override
+        public int compareTo(Point o) {
+            return Double.compare(this.value,o.value);
+        }
+    }
+
+    public double[] PerformESD(DataFrame df){
+
+        // Preserving old index
+        List<Point> points = IntStream.range(0, df.getDataPoints().size())
+                .mapToObj(i -> Point.builder().originalIndex(i).value(df.getDataPoints().get(i)).build())
+                .collect(Collectors.toList());
+
+        double median = median(points);
         double mad = mad(df.getDataPoints(),median);
 
-        List<Double> points = new ArrayList<>(df.getDataPoints());
-
         Double[] ri = new Double[16];
-        Double[] value = new Double[16];
+        Point[] value = new Point[16];
 
         for(int i=0;i<16;i++){
             median = median(points);
             int index = 0;
             int maxIndex = 0;
-            double val = 0;
+            Point val = null;
             double max = Integer.MIN_VALUE;
-            for(Double d:points){
-                if(Math.abs(d-median) > max){
-                    max = Math.abs(d-median);
+            for(Point d:points){
+                if(Math.abs(d.value-median) > max){
+                    max = Math.abs(d.value-median);
                     maxIndex = index;
                     val = d;
                 }
@@ -51,9 +69,10 @@ public class ESD {
             double p = 1- (0.5/(2*np));
             double tpn = distribution.density(p);
             gamma[i] = (nm*tpn)/Math.sqrt((nn+tpn*tpn)*(np));
+
         }
 
-        List<Double> anomaly = new ArrayList<>();
+        List<Point> anomaly = new ArrayList<>();
 
         for(int i=0;i<16;i++){
             if(ri[i]>gamma[i]){
@@ -61,14 +80,20 @@ public class ESD {
             }
         }
 
-        return anomaly;
+        double[] anom = new double[df.getDataPoints().size()];
+
+        for(Point p:anomaly){
+            anom[p.originalIndex] = p.value;
+        }
+
+        return anom;
 
     }
 
     private Double mad(List<Double> values, double median) {
         List<Double> input = new ArrayList<>(values);
         arrayAbsDistance(input, median);
-        return median(input);
+        return medianDouble(input);
     }
 
     private void arrayAbsDistance(List<Double> array, double value) {
@@ -77,7 +102,22 @@ public class ESD {
         }
     }
 
-    private Double median(List<Double> points) {
+    private Double median(List<Point> points) {
+        if (points.size()==0) {
+            throw new IllegalArgumentException("to calculate median we need at least 1 element");
+        }
+
+        List<Point> input = new ArrayList<Point>(points);
+
+        Collections.sort(input);
+
+        if (input.size()%2==0) {
+            return (input.get(input.size()/2-1).value + input.get(input.size()/2).value)/2;
+        }
+        return input.get(input.size()/2).value;
+    }
+
+    private Double medianDouble(List<Double> points) {
         if (points.size()==0) {
             throw new IllegalArgumentException("to calculate median we need at least 1 element");
         }
