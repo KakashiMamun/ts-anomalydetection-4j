@@ -7,7 +7,6 @@ import lombok.Getter;
 import org.apache.commons.math3.distribution.TDistribution;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -15,7 +14,9 @@ import java.util.stream.IntStream;
 /**
  * Created by Kakas on 12/14/2017.
  */
-public class GeneralizedESD {
+
+@Builder
+public class SeasonalHybridESD {
 
     @Builder
     @Getter
@@ -29,11 +30,13 @@ public class GeneralizedESD {
         }
     }
 
-    public static final double DEFAULT_K = 0.2;
+    public static final double DEFAULT_ALPHA = 0.05;
+    public static final double DEFAULT_OUTLIER_LIMIT = 0.2;
 
-    public double[] PerformESD(DataFrame df,double maxOutliers,double alpha){
+    private double outlierPercentage = DEFAULT_OUTLIER_LIMIT;
+    private double alpha = DEFAULT_ALPHA;
 
-        int outlierLimit = checkNUpdate(maxOutliers,df.getDataPoints().size());
+    public boolean[] PerformESD(DataFrame df){
 
         // Preserving old index
         List<Point> points = IntStream.range(0, df.getDataPoints().size())
@@ -43,24 +46,25 @@ public class GeneralizedESD {
         double median = Median.median(points);
         double mad = mad(df.getDataPoints(),median);
 
-        List<Point> outliers = calculateESD(points,outlierLimit,alpha,mad);
+        List<Point> outliers = calculateESD(points,mad);
 
-        double[] anomalies = new double[df.getDataPoints().size()];
+        boolean[] anomalies = new boolean[df.getDataPoints().size()];
 
         for(Point p:outliers){
-            anomalies[p.originalIndex] = p.value;
+            anomalies[p.originalIndex] = true;
         }
 
         return anomalies;
-
     }
 
-    private List<Point> calculateESD(List<Point> points,int outlierLimit,double alpha,double mad) {
+    private List<Point> calculateESD(List<Point> points,double medianAbsoluteDeviation) {
 
-        Double[] ri = new Double[outlierLimit];
-        Point[] value = new Point[outlierLimit];
+        int maxOutlier = calculateMaxOutlier(points.size());
 
-        for(int i=0;i<outlierLimit;i++){
+        Double[] ri = new Double[maxOutlier];
+        Point[] value = new Point[maxOutlier];
+
+        for(int i=0;i<maxOutlier;i++){
             double median = Median.median(points);
             int index = 0;
             int maxIndex = 0;
@@ -75,14 +79,14 @@ public class GeneralizedESD {
                 index++;
             }
 
-            ri[i] = (max/mad);
+            ri[i] = (max/medianAbsoluteDeviation);
             value[i] = val;
             points.remove(maxIndex);
         }
 
-        Double[] gamma = new Double[outlierLimit];
+        Double[] gamma = new Double[maxOutlier];
         int n = points.size();
-        for(int i=0;i<outlierLimit;i++){
+        for(int i=0;i<maxOutlier;i++){
             int nn = n-(i+1)-1;
             int nm = n-(i+1);
             int np = n-(i+1)+1;
@@ -95,7 +99,7 @@ public class GeneralizedESD {
 
         List<Point> anomaly = new ArrayList<>();
 
-        for(int i=0;i<outlierLimit;i++){
+        for(int i=0;i<maxOutlier;i++){
             if(ri[i]>gamma[i]){
                 anomaly.add(value[i]);
             }
@@ -104,9 +108,8 @@ public class GeneralizedESD {
         return anomaly;
     }
 
-    private int checkNUpdate(double maxOutliers, int size) {
-        double max =  maxOutliers<1/size? 1/size:maxOutliers;
-
+    private int calculateMaxOutlier(int size) {
+        double max =  outlierPercentage<1/size? 1/size:outlierPercentage;
         return (int) (max*size);
     }
 

@@ -1,6 +1,6 @@
 package com.github.kakashimamun.utils;
 
-import com.github.kakashimamun.GeneralizedESD;
+import com.github.kakashimamun.SeasonalHybridESD;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,12 +9,12 @@ import java.util.List;
 public class Median {
 
 
-    public static Double median(List<GeneralizedESD.Point> points) {
+    public static Double median(List<SeasonalHybridESD.Point> points) {
         if (points.size()==0) {
             throw new IllegalArgumentException("to calculate median we need at least 1 element");
         }
 
-        List<GeneralizedESD.Point> input = new ArrayList<GeneralizedESD.Point>(points);
+        List<SeasonalHybridESD.Point> input = new ArrayList<SeasonalHybridESD.Point>(points);
 
         Collections.sort(input);
 

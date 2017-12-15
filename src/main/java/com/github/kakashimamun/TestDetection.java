@@ -18,31 +18,22 @@ public class TestDetection {
 
         List<XYChart> charts = new ArrayList<XYChart>();
 
-        double[] d = Reader.read("src/main/resources/raw_data").stream().mapToDouble(v->(double)v).toArray();
-
-        STLDecomposer decomposer = new STLDecomposer(d,24*7);
+        List<Double> d = Reader.read("src/main/resources/raw_data");
 
         XYChart chart = new XYChartBuilder().xAxisTitle("X").yAxisTitle("Y").width(800).height(600).build();
-
-        XYSeries series = chart.addSeries("" + 1, null, decomposer.getData());
+        XYSeries series = chart.addSeries("" + 1, null, d);
         series.setMarker(SeriesMarkers.CIRCLE);
         charts.add(chart);
 
-        System.out.println(decomposer.getData().length);
-        System.out.println(decomposer.getResidual().length);
-        System.out.println(decomposer.getTrend().length);
-        System.out.println(decomposer.getSeasonal().length);
+        TsAnomalyDetector detector = new TsAnomalyDetector();
+        List<TsAnomalyDetector.DataWrapper> anomalies = detector.detect(d, 24 * 7, 0.01, 0.05,Double::doubleValue);
 
-        GeneralizedESD gesd = new GeneralizedESD();
-
-        double[] anomalies = gesd.PerformESD(new DataFrame(decomposer.getResidual()),0.01,0.05);
-
-        double[] value = new double[anomalies.length];
+        double[] value = new double[anomalies.size()];
 
         int i=0;
-        for(double val:anomalies){
-            if(val!=0){
-                value[i] = d[i];
+        for(TsAnomalyDetector.DataWrapper val:anomalies){
+            if(val.isAnomaly){
+                value[i] = d.get(i);
             }
             i++;
         }
