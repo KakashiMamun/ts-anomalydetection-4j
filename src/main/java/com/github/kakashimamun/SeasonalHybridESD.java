@@ -31,9 +31,11 @@ public class SeasonalHybridESD {
     }
 
     public static final double DEFAULT_ALPHA = 0.05;
-    public static final double DEFAULT_OUTLIER_LIMIT = 0.2;
+    public static final double DEFAULT_OUTLIER_LIMIT = 0.01;
 
+    @Builder.Default
     private double outlierPercentage = DEFAULT_OUTLIER_LIMIT;
+    @Builder.Default
     private double alpha = DEFAULT_ALPHA;
 
     public boolean[] PerformESD(DataFrame df){
@@ -109,7 +111,9 @@ public class SeasonalHybridESD {
     }
 
     private int calculateMaxOutlier(int size) {
-        double max =  outlierPercentage<1/size? 1/size:outlierPercentage;
+        double s = 1/size;
+
+        double max =  outlierPercentage<s? s:outlierPercentage;
         return (int) (max*size);
     }
 

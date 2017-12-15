@@ -26,7 +26,7 @@ public class TestDetection {
         charts.add(chart);
 
         TsAnomalyDetector detector = new TsAnomalyDetector();
-        List<TsAnomalyDetector.DataWrapper> anomalies = detector.detect(d, 24 * 7, 0.01, 0.05,Double::doubleValue);
+        List<TsAnomalyDetector.DataWrapper> anomalies = detector.detect(d, 24 * 7,Double::doubleValue);
 
         double[] value = new double[anomalies.size()];
 

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
+@Builder
 public class TsAnomalyDetector {
 
     @Builder
@@ -18,15 +19,35 @@ public class TsAnomalyDetector {
 
     }
 
-    public<T> List<DataWrapper> detect(List<T> data, int period, double outlierBound, double alpha, Function<T,Double> convertor){
+    @Builder.Default
+    private double outlierBound = SeasonalHybridESD.DEFAULT_OUTLIER_LIMIT;
 
-        double[] d = data.stream().mapToDouble(v->convertor.apply(v)).toArray();
+    @Builder.Default
+    private double alpha = SeasonalHybridESD.DEFAULT_ALPHA;
+
+
+
+    public<T> List<DataWrapper> detect(List<T> data, int period, Function<T,Double> converter){
+
+        SeasonalHybridESD esd = SeasonalHybridESD.builder().build();
+        return detectInternal(data,period,converter,esd);
+    }
+    public<T> List<DataWrapper> detect(List<T> data, int period, double outlierBound, Function<T,Double> converter){
+
+        SeasonalHybridESD esd = SeasonalHybridESD.builder().outlierPercentage(outlierBound).build();
+        return detectInternal(data,period,converter,esd);
+    }
+    public<T> List<DataWrapper> detect(List<T> data, int period, double outlierBound, double alpha,  Function<T,Double> converter){
+
+        SeasonalHybridESD esd = SeasonalHybridESD.builder().outlierPercentage(outlierBound).alpha(alpha).build();
+        return detectInternal(data,period,converter,esd);
+    }
+
+    private <T> List<DataWrapper> detectInternal(List<T> data, int period,Function<T,Double> converter, SeasonalHybridESD esd){
+        double[] d = data.stream().mapToDouble(v->converter.apply(v)).toArray();
 
         STLDecomposer decomposer = new STLDecomposer(d,period);
-
-        SeasonalHybridESD esd = SeasonalHybridESD.builder().alpha(alpha).outlierPercentage(outlierBound).build();
-
-        boolean[] anomalies =  internalDetect(decomposer,esd);
+        boolean[] anomalies =  getAnomalies(decomposer,esd);
 
         List<DataWrapper> value = new ArrayList<>(data.size());
 
@@ -39,7 +60,9 @@ public class TsAnomalyDetector {
         return value;
     }
 
-    private boolean[] internalDetect(STLDecomposer decomposer, SeasonalHybridESD esd){
+
+
+    private boolean[] getAnomalies(STLDecomposer decomposer, SeasonalHybridESD esd){
         boolean[] anomalies = esd.PerformESD(new DataFrame(decomposer.getResidual()));
         return anomalies;
     }
