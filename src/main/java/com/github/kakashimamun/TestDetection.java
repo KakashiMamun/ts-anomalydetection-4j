@@ -9,19 +9,18 @@ import org.knowm.xchart.style.markers.SeriesMarkers;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
 /**
  * Created by Kakas on 12/14/2017.
  */
-public class MatrixChart {
+public class TestDetection {
     public static void main(String[] args) {
 
         List<XYChart> charts = new ArrayList<XYChart>();
 
-        double[] d = Reader.read("C:\\Dev\\tsanomalydetection4j\\src\\main\\resources\\raw_data").stream().mapToDouble(v->(double)v).toArray();
+        double[] d = Reader.read("src/main/resources/raw_data").stream().mapToDouble(v->(double)v).toArray();
 
-        Decomposer decomposer = new Decomposer(d,24*7);
+        STLDecomposer decomposer = new STLDecomposer(d,24*7);
 
         XYChart chart = new XYChartBuilder().xAxisTitle("X").yAxisTitle("Y").width(800).height(600).build();
 
@@ -34,9 +33,9 @@ public class MatrixChart {
         System.out.println(decomposer.getTrend().length);
         System.out.println(decomposer.getSeasonal().length);
 
-        ESD esd = new ESD();
+        GeneralizedESD gesd = new GeneralizedESD();
 
-        double[] anomalies = esd.PerformESD(new DataFrame(decomposer.getResidual()));
+        double[] anomalies = gesd.PerformESD(new DataFrame(decomposer.getResidual()),0.01,0.05);
 
         double[] value = new double[anomalies.length];
 

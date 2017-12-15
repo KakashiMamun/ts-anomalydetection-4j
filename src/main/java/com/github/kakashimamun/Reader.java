@@ -26,7 +26,6 @@ public class Reader {
                 doubles.add(Double.valueOf(line));
             }
             fileReader.close();
-            System.out.println("Contents of file:");
         } catch (IOException e) {
             e.printStackTrace();
         }
