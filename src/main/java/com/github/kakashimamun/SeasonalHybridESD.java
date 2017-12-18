@@ -30,6 +30,16 @@ public class SeasonalHybridESD {
         }
     }
 
+
+    public enum ESDType{
+        /**
+         * POSITIVE: Find anomalies in upper tail
+         * NEGATIVE: Find anomalies in lower tail
+         * BOTH: Find all types of anomalies
+         */
+        POSITIVE, NEGATIVE,BOTH
+    }
+
     public static final double DEFAULT_ALPHA = 0.05;
     public static final double DEFAULT_OUTLIER_LIMIT = 0.01;
 
@@ -37,6 +47,8 @@ public class SeasonalHybridESD {
     private double outlierPercentage = DEFAULT_OUTLIER_LIMIT;
     @Builder.Default
     private double alpha = DEFAULT_ALPHA;
+    @Builder.Default
+    private SeasonalHybridESD.ESDType type = SeasonalHybridESD.ESDType.BOTH;
 
     public boolean[] PerformESD(DataFrame df){
 
@@ -73,8 +85,9 @@ public class SeasonalHybridESD {
             Point val = null;
             double max = Integer.MIN_VALUE;
             for(Point d:points){
-                if(Math.abs(d.value-median) > max){
-                    max = Math.abs(d.value-median);
+                double rCurrent = getRi(d.value,median);
+                if(rCurrent > max){
+                    max = rCurrent;
                     maxIndex = index;
                     val = d;
                 }
@@ -108,6 +121,17 @@ public class SeasonalHybridESD {
         }
 
         return anomaly;
+    }
+
+    private double getRi(double value, double median) {
+        switch (type){
+            case POSITIVE:
+                return value - median;
+            case NEGATIVE:
+                return median - value;
+            default:
+                return Math.abs(value - median);
+        }
     }
 
     private int calculateMaxOutlier(int size) {

@@ -25,21 +25,18 @@ public class TsAnomalyDetector {
     @Builder.Default
     private double alpha = SeasonalHybridESD.DEFAULT_ALPHA;
 
+    @Builder.Default
+    private SeasonalHybridESD.ESDType type = SeasonalHybridESD.ESDType.BOTH;
 
 
     public<T> List<DataWrapper> detect(List<T> data, int period, Function<T,Double> converter){
 
-        SeasonalHybridESD esd = SeasonalHybridESD.builder().build();
-        return detectInternal(data,period,converter,esd);
-    }
-    public<T> List<DataWrapper> detect(List<T> data, int period, double outlierBound, Function<T,Double> converter){
+        SeasonalHybridESD esd = SeasonalHybridESD.builder()
+                .type(this.type)
+                .outlierPercentage(this.outlierBound)
+                .alpha(this.alpha)
+                .build();
 
-        SeasonalHybridESD esd = SeasonalHybridESD.builder().outlierPercentage(outlierBound).build();
-        return detectInternal(data,period,converter,esd);
-    }
-    public<T> List<DataWrapper> detect(List<T> data, int period, double outlierBound, double alpha,  Function<T,Double> converter){
-
-        SeasonalHybridESD esd = SeasonalHybridESD.builder().outlierPercentage(outlierBound).alpha(alpha).build();
         return detectInternal(data,period,converter,esd);
     }
 

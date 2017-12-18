@@ -7,6 +7,7 @@ import org.knowm.xchart.XYChartBuilder;
 import org.knowm.xchart.XYSeries;
 import org.knowm.xchart.style.markers.SeriesMarkers;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,27 +22,27 @@ public class TestDetection {
         List<Double> d = Reader.read("src/main/resources/raw_data");
 
         XYChart chart = new XYChartBuilder().xAxisTitle("X").yAxisTitle("Y").width(800).height(600).build();
-        XYSeries series = chart.addSeries("" + 1, null, d);
+        XYSeries series = chart.addSeries("Real Data", null, d);
         series.setMarker(SeriesMarkers.CIRCLE);
         charts.add(chart);
 
-        TsAnomalyDetector detector = new TsAnomalyDetector();
-        List<TsAnomalyDetector.DataWrapper> anomalies = detector.detect(d, 24 * 7,Double::doubleValue);
+        TsAnomalyDetector detector = TsAnomalyDetector.builder().alpha(0.05).outlierBound(0.01).type(SeasonalHybridESD.ESDType.BOTH).build();
+
+        List<TsAnomalyDetector.DataWrapper> anomalies = detector.detect(d, 24*7,Double::doubleValue);
 
         double[] value = new double[anomalies.size()];
 
         int i=0;
         for(TsAnomalyDetector.DataWrapper val:anomalies){
             if(val.isAnomaly){
-                value[i] = d.get(i);
+                value[i] = (double) val.getPoint();
             }
             i++;
         }
 
-        chart = new XYChartBuilder().xAxisTitle("X").yAxisTitle("Y").width(800).height(600).build();
-        series = chart.addSeries("" + 1, null, value);
-        series.setMarker(SeriesMarkers.NONE);
-        charts.add(chart);
+        series = chart.addSeries("Anomalies", null, value);
+        series.setMarker(SeriesMarkers.SQUARE);
+        series.setMarkerColor(Color.RED);
 
 
 //        chart = new XYChartBuilder().xAxisTitle("X").yAxisTitle("Y").width(800).height(600).build();
