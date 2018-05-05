@@ -26,7 +26,7 @@ public class TestDetection {
         series.setMarker(SeriesMarkers.CIRCLE);
         charts.add(chart);
 
-        TsAnomalyDetector detector = TsAnomalyDetector.builder().alpha(0.05).outlierBound(0.01).type(SeasonalHybridESD.ESDType.BOTH).build();
+        TsAnomalyDetector detector = TsAnomalyDetector.builder().alpha(0.05).outlierBound(0.005).type(SeasonalHybridESD.ESDType.BOTH).build();
 
         List<TsAnomalyDetector.DataWrapper> anomalies = detector.detect(d, 24*7,Double::doubleValue);
 

@@ -41,7 +41,7 @@ public class TsAnomalyDetector {
     }
 
     private <T> List<DataWrapper> detectInternal(List<T> data, int period,Function<T,Double> converter, SeasonalHybridESD esd){
-        double[] d = data.stream().mapToDouble(v->converter.apply(v)).toArray();
+        double[] d = data.stream().mapToDouble(converter::apply).toArray();
 
         STLDecomposer decomposer = new STLDecomposer(d,period);
         boolean[] anomalies =  getAnomalies(decomposer,esd);

@@ -57,10 +57,12 @@ public class SeasonalHybridESD {
                 .mapToObj(i -> Point.builder().originalIndex(i).value(df.getDataPoints().get(i)).build())
                 .collect(Collectors.toList());
 
-        double median = Median.median(points);
-        double mad = mad(df.getDataPoints(),median);
-
-        List<Point> outliers = calculateESD(points,mad);
+        /*
+          1. Get Median
+          2. Get Median absolute deviation
+          3. calculate ESD
+         */
+        List<Point> outliers = calculateESD(points,mad(df.getDataPoints(),Median.median(points)));
 
         boolean[] anomalies = new boolean[df.getDataPoints().size()];
 
